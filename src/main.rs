@@ -30,23 +30,6 @@ fn gethostname() -> String {
 extern "C" fn enter(_: *mut libc::c_void) -> libc::c_int {
     let mypid = unsafe { libc::getpid() };
     println!("I'm called from clone. Pid {}", mypid);
-
-    // let mut uts = Box::new(libc::utsname {
-    //    sysname: [0; 65],
-    //    nodename: [0; 65],
-    //    release: [0; 65],
-    //    version: [0; 65],
-    //    machine: [0; 65],
-    //    domainname: [0; 65],
-    // });
-    // let r = unsafe { libc::uname(&mut *uts) };
-    // if r == -1 {
-    //    perror("uname");
-    // }
-
-    // let nn = unsafe { CStr::from_ptr(uts.nodename.as_ptr()) };
-    // println!("Node name {:?}", nn);
-
     println!("Host name in child {}", gethostname());
 
     std::thread::sleep(std::time::Duration::from_secs(30));
