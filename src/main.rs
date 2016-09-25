@@ -47,16 +47,13 @@ extern "C" fn enter(_: *mut libc::c_void) -> libc::c_int {
     sethostname("temporary-only-in-child");
     println!("Host name in child {}", gethostname());
 
-    println!("Sleeping for 10 seconds");
-    std::thread::sleep(std::time::Duration::from_secs(10));
+    let sleep_dur = std::time::Duration::from_secs(30);
+    println!("Sleeping for {} seconds", sleep_dur.as_secs());
+    std::thread::sleep(sleep_dur);
     return 0;
 }
 
-fn child_in_new_uts() {
-    let mypid = unsafe { libc::getpid() };
-    println!("Parent pid {}", mypid);
-    println!("Original host name in parent {}", gethostname());
-
+fn child_in_new_uts() -> Result<i32, i32> {
     const STACK_SIZE: usize = 1024 * 1024;
     let mut stack = Vec::with_capacity(STACK_SIZE);
     let stack_top = unsafe { stack.as_mut_ptr().offset(STACK_SIZE as isize) };
@@ -68,16 +65,27 @@ fn child_in_new_uts() {
     };
     if child_pid == -1 {
         perror("clone");
+        return Err(-1);
     }
-
-    let wait_r = unsafe { libc::waitpid(child_pid, std::ptr::null_mut(), 0) };
-    if wait_r == -1 {
-        perror("waitpid");
-    }
-
-    println!("Host name in parent {}", gethostname());
+    Ok(child_pid)
 }
 
 fn main() {
-    child_in_new_uts();
+    let mypid = unsafe { libc::getpid() };
+    println!("Parent pid {}", mypid);
+    println!("Original host name in parent {}", gethostname());
+
+    match child_in_new_uts() {
+        Ok(child_pid) => {
+            let wait_r = unsafe { libc::waitpid(child_pid, std::ptr::null_mut(), 0) };
+            if wait_r == -1 {
+                perror("waitpid");
+            }
+        }
+        Err(_) => {
+            println!("Error spawning process");
+        }
+    }
+
+    println!("Host name in parent {}", gethostname());
 }
