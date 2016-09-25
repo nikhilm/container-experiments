@@ -1,5 +1,4 @@
 extern crate libc;
-extern crate memchr;
 
 use libc::clone;
 use std::ffi::CString;
@@ -61,14 +60,11 @@ fn child_in_new_uts() {
     const STACK_SIZE: usize = 1024 * 1024;
     let mut stack = Vec::with_capacity(STACK_SIZE);
     let stack_top = unsafe { stack.as_mut_ptr().offset(STACK_SIZE as isize) };
-    let arg = CString::new("/bin/bash").unwrap();
-    let bytes = arg.into_raw();
-    let bytesfoo: *mut libc::c_void = bytes as *mut libc::c_void;
     let child_pid = unsafe {
         clone(enter,
               stack_top,
               libc::CLONE_NEWUTS | libc::SIGCHLD,
-              bytesfoo)
+              std::ptr::null_mut())
     };
     if child_pid == -1 {
         perror("clone");
