@@ -1,5 +1,5 @@
 [package]
-name = "containers"
+name = "uts-namespace"
 version = "0.1.0"
 authors = ["Nikhil Marathe <nsm.nikhil@gmail.com>"]
 
